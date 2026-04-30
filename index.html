@@ -485,6 +485,13 @@ const WORK=[
 const SUCCESS=["น้องเวรภูมิใจในคุณมากค่ะ! 🔥","OT ทุกชั่วโมงมีค่านะคะ 💰","สู้ตลอดเลยค่ะ เก่งมากเลย! ⚡","ทุกเวรที่จด = เงินที่ได้จริงค่ะ 💸","ยอดมากเลยค่ะ เงินในกระเป๋าแน่นขึ้นแล้ว! ✨"];
 
 function init(){
+  // ── ตัด URL ซ้ำออก (เช่น /freemium/freemium → /freemium) ──
+  const cleanPath = window.location.pathname.replace(/(\/.+?)\1+/, "$1");
+  if (cleanPath !== window.location.pathname) {
+    history.replaceState(null, "", cleanPath + window.location.search);
+  }
+  const REDIRECT_URI = window.location.origin + cleanPath;
+
   updateClock(); setInterval(updateClock, 1000); setDefaultDate(); setSpeech(IDLE);
   sumMonth = new Date();
   curYear = new Date().getFullYear();
@@ -493,7 +500,7 @@ function init(){
   liff.init({ liffId: "2009520328-4YznojXl" })
     .then(() => {
       if (!liff.isLoggedIn()) {
-        liff.login();
+        liff.login({ redirectUri: REDIRECT_URI }); // ← ระบุ URI ที่ clean แล้ว
         return null;
       }
       return liff.getProfile();
@@ -505,7 +512,6 @@ function init(){
       document.getElementById("profName").textContent = uname;
       document.getElementById("settingName").textContent = uname;
       document.getElementById("nameInput").value = uname;
-      // บันทึก user เข้า Sheet + link rich menu
       fetch(GAS, {method:"POST", body:JSON.stringify({
         action:"saveUser", userId:uid, name:uname, rate:0
       })});
@@ -513,11 +519,10 @@ function init(){
     })
     .catch(err => {
       const msg = err.message || JSON.stringify(err) || "";
-      // token หมดอายุ / ไม่มี token → login ใหม่
       if (msg.includes("expired") || msg.includes("401") ||
           msg.includes("access token") || msg.includes("login") ||
           msg.includes("Need") || msg.includes("unauthorized")) {
-        liff.login();
+        liff.login({ redirectUri: REDIRECT_URI }); // ← ตรงนี้ด้วย
         return;
       }
       document.getElementById("loadingScreen").innerHTML = `
@@ -528,7 +533,7 @@ function init(){
             กรุณากดลิงก์จาก Rich Menu ใน LINE นะคะ
           </div>
           <div style="font-size:11px;color:#B0BEC5;margin-top:8px;">${msg}</div>
-          <button onclick="liff.login()"
+          <button onclick="liff.login({ redirectUri: '${REDIRECT_URI}' })"
             style="margin-top:16px;padding:10px 24px;background:#00838F;color:white;border:none;border-radius:12px;font-size:14px;cursor:pointer;">
             🔄 เข้าสู่ระบบใหม่
           </button>
