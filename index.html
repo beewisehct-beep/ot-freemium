@@ -490,7 +490,6 @@ function init(){
   if (cleanPath !== window.location.pathname) {
     history.replaceState(null, "", cleanPath + window.location.search);
   }
-  const REDIRECT_URI = window.location.origin + cleanPath;
 
   updateClock(); setInterval(updateClock, 1000); setDefaultDate(); setSpeech(IDLE);
   sumMonth = new Date();
@@ -500,7 +499,7 @@ function init(){
   liff.init({ liffId: "2009520328-4YznojXl" })
     .then(() => {
       if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: REDIRECT_URI });
+        liff.login();
         return null;
       }
       return liff.getProfile();
@@ -524,7 +523,7 @@ function init(){
       if (msg.includes("expired") || msg.includes("401") ||
           msg.includes("access token") || msg.includes("login") ||
           msg.includes("Need") || msg.includes("unauthorized")) {
-        liff.login({ redirectUri: REDIRECT_URI });
+        liff.login();
         return;
       }
       document.getElementById("loadingScreen").innerHTML = `
@@ -535,7 +534,7 @@ function init(){
             กรุณากดลิงก์จาก Rich Menu ใน LINE นะคะ
           </div>
           <div style="font-size:11px;color:#B0BEC5;margin-top:8px;">${msg}</div>
-          <button onclick="liff.login({ redirectUri: '${REDIRECT_URI}' })"
+          <button onclick="liff.login()"
             style="margin-top:16px;padding:10px 24px;background:#00838F;color:white;border:none;border-radius:12px;font-size:14px;cursor:pointer;">
             🔄 เข้าสู่ระบบใหม่
           </button>
